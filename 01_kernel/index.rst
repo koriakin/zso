@@ -2,17 +2,29 @@
 Zajęcia 1: kompilacja jądra
 ===========================
 
-.. contents::
+.. toctree::
+   :hidden:
+
+   qemu
+   zadanie
+
+
+Materiały dodatkowe
+===================
+
+- :ref:`01-qemu`
+- :ref:`01-zadanie`
+- :download:`Przykładowa konfiguracja <config>`
 
 
 Lektura
 =======
 
-Kernel-HOWTO (niestety, przestarzałe)
-Kernel-Build-HOWTO
-/usr/src/linux/README
-/usr/src/linux/Documentation/*
-info grub
+- Kernel-HOWTO (niestety, przestarzałe)
+- Kernel-Build-HOWTO
+- /usr/src/linux/README
+- /usr/src/linux/Documentation/*
+- info grub
 
 Przygotowanie źródeł jądra
 ==========================

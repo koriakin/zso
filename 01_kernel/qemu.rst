@@ -1,3 +1,5 @@
+.. _01-qemu:
+
 ====
 QEMU
 ====
@@ -147,7 +149,7 @@ użycie opcji virtio-9p-pci (do współdzielenia plików) i virtconsole (dla
 obsługi kopiuj/wklej i sensownego terminala).
 
 Jeśli została użyta opcja virtio-9p-pci, katalog współdzielony (hshare/ na
-systemie hosta) jest dostępny jako /host. Należy jednak zauważyć, że protokół
+systemie hosta) jest dostępny jako ``/hshare``. Należy jednak zauważyć, że protokół
 9p nie obsługuje poprawnie pełnej semantyki UNIXowego systemu plików, co może
 powodować problemy przy niektórych zastosowaniach. Niemożliwa jest m.in.
 kompilacja jądra wewnątrz tak zamontowanego katalogu, ze względu na wadliwą
