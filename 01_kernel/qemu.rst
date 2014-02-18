@@ -30,7 +30,7 @@ qemu należy uruchomić poleceniem::
 
 Opcje qemu do użycia na zajęciach:
 
--drive file=zso2013_cow.img,if=virtio
+-drive file=zso2014_cow.img,if=virtio
     Podłącza obraz dysku twardego przez wirtualne urządzenie blokowe.
     Wymagana.
 
@@ -113,7 +113,7 @@ w postaci zmodyfikowanej wersji qemu.
 Systemem zainstalowanym na obrazie jest debian 6.0.6, z drobnymi
 modyfikacjami. Można się zalogować używając loginu root i hasła root.
 W przypadku potrzeby użycia nieuprzywilejowanego konta (np. do testów), można
-użyć konta zso2013 (hasło zso2013).
+użyć konta zso2014 (hasło zso2014).
 
 Obraz zawiera jedną partycję typu ext3 z zainstalowanym bootloaderem grub2
 i jądrem w wersji 2.6.34.8 (czyli takim, jakie będzie używane na zajęciach).
@@ -171,7 +171,7 @@ któregoś z komputerów w labach, albo własnej maszyny.
 
 sshowanie się na wirtualną maszynę jest możliwe, z użyciem forwardowania
 portu 22, lecz należy pamiętać o uprzedniej zmianie hasła na kontach root
-i zso2013.
+i zso2014.
 
 Używając obrazu copy-on-write, należy uważać, aby nigdy nie modyfikować
 bazowego obrazu - jakakolwiek zmiana spowoduje, że obraz copy-on-write staje
