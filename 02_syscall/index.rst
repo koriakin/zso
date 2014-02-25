@@ -11,7 +11,7 @@ Zajęcia 2: interfejsy jądra
 Materiały dodatkowe
 ===================
 
-- :ref:`01-zadanie`
+- :ref:`02-zadanie`
 
 
 Wywołania systemowe w systemie Linux
