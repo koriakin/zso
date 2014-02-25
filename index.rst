@@ -8,3 +8,4 @@ Spis treści:
    :titlesonly:
 
    01_kernel/index
+   02_syscall/index
