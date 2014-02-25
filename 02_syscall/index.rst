@@ -4,6 +4,8 @@ Zajęcia 2: interfejsy jądra
 
 Data: 25.02.2014, 26.02.2014
 
+.. contents::
+
 .. toctree::
    :hidden:
 
