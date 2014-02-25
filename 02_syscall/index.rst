@@ -451,7 +451,7 @@ Literatura
 1. Sekcja 2 manuala, szczególnie: syscall, futex, sigaction
 2. Żródła VDSO/vsyscall w arch/x86/vdso
 3. Lista syscalli w asm/unistd.h
-4. Ulrich Drepper "Futexes Are Tricky", 2011 - `http://www.akkadia.org/drepper/futex.pdf`
+4. Ulrich Drepper "Futexes Are Tricky", 2011 - http://www.akkadia.org/drepper/futex.pdf
 5. man 7 signal
 
 .. Marcin Kościelnicki (m.koscielnicki@mimuw.edu.pl)
