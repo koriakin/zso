@@ -2,6 +2,8 @@
 Zajęcia 1: kompilacja jądra
 ===========================
 
+Data: 18.02.2014, 19.02.2014
+
 .. toctree::
    :hidden:
 
