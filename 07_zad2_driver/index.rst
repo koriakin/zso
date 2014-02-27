@@ -1,8 +1,10 @@
 ==============
-Zajęcia 8: PCI
+Zajęcia 7: PCI
 ==============
 
-Data: 08.04.2014, 09.04.2014
+Data: 01.04.2014, 02.04.2014
+
+Zajęcia przeniesione do sali 4070 (wtorek) i 5820 (środa).
 
 .. toctree::
    :hidden:

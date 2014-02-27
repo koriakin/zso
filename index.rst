@@ -13,8 +13,8 @@ Spis treści:
    04_modules/index
    05_chardev/index
    06_kernel/index
-   07_unk/index
-   08_zad2_driver/index
+   07_zad2_driver/index
+   08_unk/index
    09_proc_sysfs/index
    10_ext2/index
    11_zad3_kernel/index
