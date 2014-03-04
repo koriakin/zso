@@ -4,10 +4,6 @@ Zajęcia 3: ELF
 
 Data: 04.03.2014, 05.03.2014
 
-.. warning::
-
-   Materiały na te zajęcia mogą się jeszcze zmienić.
-
 .. contents::
 
 .. toctree::
