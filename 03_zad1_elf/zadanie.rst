@@ -8,7 +8,7 @@ Zadanie 1: biblioteki
 
 Data ogłoszenia: 04.03.2014
 
-Termin oddania: 01.04.2014 [?]
+Termin oddania: 02.04.2014, 08:00
 
 
 Materiały dodatkowe
