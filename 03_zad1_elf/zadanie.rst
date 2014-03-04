@@ -11,6 +11,12 @@ Data ogłoszenia: 04.03.2014
 Termin oddania: 01.04.2014 [?]
 
 
+Materiały dodatkowe
+===================
+
+- :download:`loader.h`
+
+
 Wprowadzenie
 ============
 
