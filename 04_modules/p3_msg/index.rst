@@ -7,7 +7,13 @@ Przykład 3: Parametry modułów
 Prosty moduł sparametryzowany wypisujący pewien napis przy instalacji i przy
 usuwaniu z jądra.
 
-:download:`../p3_msg.tar`
+
+Kod
+---
+
+- paczka: :download:`../p3_msg.tar`
+- źródło: :download:`msg_mod.c`
+- Makefile/KBUILD: :download:`Makefile`
 
 Instalacja
 ----------

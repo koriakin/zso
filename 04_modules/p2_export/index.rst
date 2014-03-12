@@ -4,9 +4,18 @@
 Przykład 2: Eksportowanie symboli
 =================================
 
-Prosty przykład modułów eksportujących symbole.
+Dwa moduły, które eksportują funkcje o tej samej nazwie oraz jeden, który 
+chce z tej funkcji skorzystać. Różna kolejność ładowania i usuwania modułów 
+pozwala prześledzić sposób, w jaki symbole dołączane są dynamicznie do 
+jądra.
 
-:download:`../p2_export.tar`
+
+Kod
+---
+
+- paczka: :download:`../p2_export.tar`
+- źródło: :download:`base1.c`, :download:`base2.c`, :download:`call_base.c`
+- Makefile/KBUILD: :download:`Makefile`
 
 Działanie
 ---------

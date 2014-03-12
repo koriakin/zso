@@ -9,10 +9,10 @@ Data: 11.03.2014, 12.03.2014
 .. toctree::
    :hidden:
 
-    p1_hello/index
-    p2_export/index
-    p3_msg/index
-    p4_kmalloc/index
+   p1_hello/index
+   p2_export/index
+   p3_msg/index
+   p4_kmalloc/index
 
 
 Materiały dodatkowe
@@ -174,13 +174,6 @@ Czasami można spotkać starsze moduły używające funkcji o domyślnych nazwac
 ``module_init()`` i ``module_exit()``. Nie jest to zalecane w obecnych wersjach
 jądra.
 
-
-Przykład I (Hello, World!)
-==========================
-
-Moduł wypisujący "Hello world" przy inicjalizacji i "Good bye" przy zwalnianiu.
-Opis jest w pliku README i kodzie źródłowym modułu.
-XXX
 
 Zależności między modułami
 ==========================
@@ -468,34 +461,12 @@ standardowej biblioteki C lub bardzo do nich podobnych, między innymi:
 Funkcje te są zawarte w innych nagłówkach niż zwykle: musimy użyć np.
 ``linux/string.h``, ``linux/bsearch.h``, itd.
 
-Przykład II (eksportowanie symboli)
-===================================
-
-Dwa moduły, które eksportują funkcje o tej samej nazwie oraz jeden, który 
-chce z tej funkcji skorzystać. Różna kolejność ładowania i usuwania modułów 
-pozwala prześledzić sposób, w jaki symbole dołączane są dynamicznie do 
-jądra. Opis jest w pliku README i kodzie źródłowym modułu.
-XXX
-
-Przykład III (parametry)
-========================
-
-Moduł przyjmujący parametry, które modyfikują jego działanie. Opis jest w 
-pliku README i kodzie źródłowym modułu.
-XXX
-
 Zastosowanie modułów
 ====================
 
 Moduły najczęściej są wykorzystywane jako części jądra implementujące
 sterowniki urządzeń (to zastosowanie modułów bedzie omawiane na następnych
 zajęciach), systemy plików, czy protokoły sieciowe.
-
-Przykład IV (kmalloc)
-=====================
-
-Moduł, który ilustruje użycie funkcji do alokacji pamięci (``kmalloc``) i do
-operacji na stringach (``strcat``).
 
 Ćwiczenia wprawkowe
 ===================

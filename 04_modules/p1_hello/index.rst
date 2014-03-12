@@ -6,7 +6,13 @@ Przykład 1: Hello, world
 
 Prosty moduł wypisujący "Hello world" przy instalacji i "Good bye" przy usuwaniu z jadra.
 
-:download:`../p1_hello.tar`
+
+Kod
+---
+
+- paczka: :download:`../p1_hello.tar`
+- źródło: :download:`hello_mod.c`
+- Makefile/KBUILD: :download:`Makefile`
 
 Kompilacja
 ----------
