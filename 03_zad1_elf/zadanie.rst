@@ -15,6 +15,7 @@ Materiały dodatkowe
 ===================
 
 - :download:`loader.h`
+- :download:`z1_test.tar`
 
 
 Wprowadzenie
@@ -177,7 +178,7 @@ części:
 Testy
 =====
 
-Testy użyte do oceny zadania będą opublikowane do 11.03.2014.
+Testy użyte do oceny zadania: :download:`z1_test.tar`.
 
 
 Pytania i odpowiedzi
