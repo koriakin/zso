@@ -132,6 +132,9 @@ Funkcje i odpowiadające im makrodefinicje zdefiniowane są w pliku
 ``asm/uaccess.h``. Należy zwrócić uwagę, iż funkcje dla bloków o
 rozmiarze potęg dwójki są zoptymalizowane.
 
+W przypadku błedu przy kopiowaniu z/do przestrzeni użytkownika, syscalle
+powinny zwracać ``-EFAULT``.
+
 
 Wykorzystanie standardowej implementacji list
 ---------------------------------------------
