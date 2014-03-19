@@ -36,7 +36,7 @@ static int major = 42;
  * przestrzeni adresowej jądra do przestrzeni adresowej użytkownika.
  * Wersja jednokrotnego wypisania.
  */
-static ssize_t yatb_once_read(struct file * file,char * buf,size_t count,loff_t *filepos)
+static ssize_t yatb_once_read(struct file *file, char __user *buf, size_t count, loff_t *filepos)
 {
 	long my_pos = file->f_pos;
 	long my_max = sizeof(yatb_reply) - 1;
@@ -45,14 +45,14 @@ static ssize_t yatb_once_read(struct file * file,char * buf,size_t count,loff_t 
 	/* Czy to nie EOF? */
 	if (my_pos >= my_max || my_pos < 0)
 		return 0; 
-	
+
 	/* ustalamy, ile tak naprawdę możemy skopiować */
 	if (count > my_max-my_pos)
 		count = my_max-my_pos;
 
 	/* kopiujemy do przestrzeni użytkownika */
 	not_copied = copy_to_user(buf,yatb_reply+my_pos,count);
-	
+
 	if (not_copied != 0)
 	{
 		return -EFAULT;
@@ -75,7 +75,7 @@ static ssize_t yatb_once_read(struct file * file,char * buf,size_t count,loff_t 
  *
  * Liczbę powtorzeń przechowujemy w danych prywatnych otwartego pliku.
  */
-static ssize_t yatb_read(struct file * file,char * buf,size_t count,loff_t *filepos)
+static ssize_t yatb_read(struct file *file,char __user *buf, size_t count, loff_t *filepos)
 {
 	long my_pos = file->f_pos;
 	int my_max = sizeof(yatb_reply) - 1;
@@ -120,7 +120,7 @@ static ssize_t yatb_read(struct file * file,char * buf,size_t count,loff_t *file
  *
  * Liczbę powtórzeń przechowujemy jako daną prywatną otwartego pliku.
  */
-static ssize_t yatb_write(struct file * file,const char * buf,size_t count,loff_t *filepos)
+static ssize_t yatb_write(struct file *file, const char __user *buf, size_t count, loff_t *filepos)
 {
 	long *priv = file->private_data;
 	int my_max = sizeof(yatb_reply) - 1;
@@ -143,8 +143,8 @@ static ssize_t yatb_write(struct file * file,const char * buf,size_t count,loff_
 	return count;
 }
 
-static int yatb_open(struct inode* ino, struct file* filep);
-static int yatb_release(struct inode* ino, struct file* filep);
+static int yatb_open(struct inode *ino, struct file *filep);
+static int yatb_release(struct inode *ino, struct file *filep);
 
 
 /* operacje dla wersji z jednokrotnym wypisaniem */
@@ -167,7 +167,7 @@ static struct file_operations yatb_fops = {
 
 /* Wspólny open i release */
 static int
-yatb_open(struct inode* ino, struct file* filep)
+yatb_open(struct inode *ino, struct file *filep)
 {
 	/* Urządzenie o podnumerze 1 - odczyt jednokrotny */
 	if (MINOR(ino->i_rdev) == 1)
@@ -189,7 +189,7 @@ yatb_open(struct inode* ino, struct file* filep)
  * dla otwartego pliku, tu należałoby ją zwolnić.
  */
 static int
-yatb_release(struct inode* ino, struct file* filep)
+yatb_release(struct inode *ino, struct file *filep)
 {
 	return 0;
 }
