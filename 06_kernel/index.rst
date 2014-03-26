@@ -480,7 +480,7 @@ Z przydatniejszych można wymienić:
 
 ``linux/idr.h``
      mapa ``int`` w ``void *`` z dynamiczną alokacją identyfikatorów
-``linux/kreg.h``
+``linux/kref.h``
      łatwe zliczanie referencji
 ``linux/bitmap.h``
      efektywne tablice bitów
