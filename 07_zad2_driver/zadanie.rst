@@ -98,7 +98,7 @@ części:
 - pełne wykorzystanie bloków urzadzenia (od 0 do 5 punktów):
 
   - tylko blok operacji SHA-1 (ręczne użycie rejestru SHA1_DATA): 0p
-  - użycie bloku wczytywania danych: 4p
+  - użycie bloku wczytywania danych: 3p
   - użycie bloków wczytywania danych i poleceń (zapewniając, że
 	urządzenie może być bez przerwy aktywne, jeśli jest cały czas
 	karmione danymi): 5p
