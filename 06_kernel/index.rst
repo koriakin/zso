@@ -479,24 +479,24 @@ okazać przydatne przy pisaniu najróżniejszych sterowników.
 Z przydatniejszych można wymienić:
 
 ``linux/idr.h``
-     mapa ``int`` w ``void *`` z dynamiczną alokacją identyfikatorów
+    mapa ``int`` w ``void *`` z dynamiczną alokacją identyfikatorów
 ``linux/kref.h``
-     łatwe zliczanie referencji
+    łatwe zliczanie referencji
 ``linux/bitmap.h``
-     efektywne tablice bitów
+    efektywne tablice bitów
 ``linux/btree.h``
-     B-drzewa
+    B-drzewa
 ``linux/bug.h``, ``asm-generic/bug.h``
-     raportowanie krytycznych błędów w kodzie sterownika wynikających z wad kodu
-     oraz ostrzeżeń (coś w rodzaju ``assert``)
+    raportowanie krytycznych błędów w kodzie sterownika wynikających z wad kodu
+    oraz ostrzeżeń (coś w rodzaju ``assert``)
 ``linux/circ_buf.h``
-     bufory cykliczne
+    bufory cykliczne
 ``linux/hash.h``
-     Proste funkcje hashujące
+    Proste funkcje hashujące
 ``linux/kernel.h``
-     Różne proste funkcje:
+    Różne proste funkcje:
 
-     ``ALIGN(x,a)``
+    ``ALIGN(x,a)``
         wyrównuje ``x`` w dół do wielokrotności ``a`` (``a`` musi być potęgą dwójki)
     ``PTR_ALIGN(p, a)``
         jak wyżej, ale na wskaźnikach
@@ -519,12 +519,12 @@ Z przydatniejszych można wymienić:
         ``val`` przycięte do zakresu [``min``, ``max``]
 
 ``linux/kobject.h``
-     ogólny typ obiektowy ze zliczaniem referencji i widocznością w sysfs (na
-     ich podstawie jest zrobiony m.in. ``cdev`` oraz ``device``)
+    ogólny typ obiektowy ze zliczaniem referencji i widocznością w sysfs (na
+    ich podstawie jest zrobiony m.in. ``cdev`` oraz ``device``)
 ``linux/parser.h``
-     prosty parser do opcji
+    prosty parser do opcji
 ``linux/rbtree.h``
-     drzewa czerwono-czarne
+    drzewa czerwono-czarne
 
 
 Literatura

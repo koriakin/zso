@@ -15,7 +15,7 @@ Zajęcia przeniesione do sali 4070 (wtorek) i 5820 (środa).
 Materiały dodatkowe
 ===================
 
-- :ref:`08-zadanie`
+- :ref:`07-zadanie`
 
 
 Wstęp
