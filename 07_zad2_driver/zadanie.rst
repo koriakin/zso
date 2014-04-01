@@ -114,9 +114,9 @@ Sterownik powinien zostać zrealizowany jako moduł jądra Linux w wersji
 3.13.3.  Moduł zawierający sterownik powinien nazywać się hashdev.ko.
 Jako rozwiązanie należy dostarczyć paczkę zawierającą:
 
- - źródła modułu
- - plik/pliki Makefile i Kbuild pozwalające na zbudowanie modułu
- - krótki opis rozwiązania
+- źródła modułu
+- plik/pliki Makefile i Kbuild pozwalające na zbudowanie modułu
+- krótki opis rozwiązania
 
 Pytania i odpowiedzi
 ====================
