@@ -14,8 +14,8 @@ Spis treści:
    05_chardev/index
    06_kernel/index
    07_zad2_driver/index
-   08_unk/index
-   09_proc_sysfs/index
+   08_sysfs/index
+   09_proc/index
    10_ext2/index
    11_zad3_kernel/index
    12_boot/index
