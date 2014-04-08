@@ -21,8 +21,9 @@ Materiały dodatkowe
 - :ref:`07-hashdev`
 - :ref:`07-qemu`
 - :download:`hashdev_ioctl.h`
+- :download:`hashdev.h`
 
-TODO: nagłówek, QEMU, testy
+TODO: QEMU, testy
 
 
 Wprowadzenie
