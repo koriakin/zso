@@ -30,7 +30,7 @@
 #define HASHDEV_CMD_SHA1_H_LOAD(addr)	(0x02 | (addr))
 #define HASHDEV_CMD_SHA1_DATA_PTR(addr)	(0x03 | (addr))
 #define HASHDEV_CMD_SHA1_DATA_COUNT(cnt)	(0x07 | (cnt))
-#define HASHDEV_CMD_SHA1_INTR(idx)	(0x07 | (idx) << 6)
+#define HASHDEV_CMD_SHA1_INTR(idx)	(0x0b | (idx) << 6)
 
 #define HASHDEV_SHA1_BLOCK_SIZE		0x40
 
