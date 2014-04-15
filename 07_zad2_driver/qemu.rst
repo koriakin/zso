@@ -10,10 +10,10 @@ dostępna w dwóch wersjach binarnych (na arch linuxa oraz na studentsa) oraz
 
 Aby własnoręcznie skompilować zmodyfikowaną wersję qemu, należy:
 
-1. Ściągnąć pliki :download:`qemu-1.4.0.tar.bz2` oraz
+1. Ściągnąć pliki :download:`qemu-1.7.1.tar.bz2` oraz
    :download:`qemu-hashdev.patch`
-2. ``tar xf qemu-1.4.0.tar.bz2``
-3. ``cd qemu-1.4.0``
+2. ``tar xf qemu-1.7.1.tar.bz2``
+3. ``cd qemu-1.7.1``
 4. ``patch -p1 < ../qemu-hashdev.patch``
 5. Upewnić się, że są zainstalowane zależności: ``ncurses``, ``libsdl``,
    ``curl``, a w niektórych dystrybucjach także ``ncurses-dev``, ``libsdl-dev``,

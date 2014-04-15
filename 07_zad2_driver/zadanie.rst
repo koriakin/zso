@@ -22,8 +22,10 @@ Materiały dodatkowe
 - :ref:`07-qemu`
 - :download:`hashdev_ioctl.h`
 - :download:`hashdev.h`
+- :download:`qemu-1.7.1.tar.bz2`
+- :download:`qemu-hashdev.patch`
 
-TODO: QEMU, testy
+TODO: testy
 
 
 Wprowadzenie
@@ -72,6 +74,8 @@ major i minor dla tych urządzeń są dowolne (majory powinny być alokowane
 dynamicznie).
 
 Definicje ioctli są zawarte w :download:`hashdev_ioctl.h`
+
+Sterownik może przyjąć ograniczenie do 256 urządzeń w systemie.
 
 
 Założenia interakcji ze sprzętem
