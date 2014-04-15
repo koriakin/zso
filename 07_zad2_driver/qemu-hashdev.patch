@@ -1,0 +1,511 @@
+diff -Nru qemu-1.7.1-orig/hw/misc/hashdev.c qemu-1.7.1/hw/misc/hashdev.c
+--- qemu-1.7.1-orig/hw/misc/hashdev.c	1970-01-01 01:00:00.000000000 +0100
++++ qemu-1.7.1/hw/misc/hashdev.c	2014-04-09 18:27:03.411758809 +0200
+@@ -0,0 +1,456 @@
++/*
++ * SHA-1 accelerator device
++ *
++ * Copyright (C) 2014 Marcin Kościelnicki
++ *
++ * This work is licensed under the terms of the GNU GPL, version 2.  See
++ * the COPYING file in the top-level directory.
++ */
++
++#include "hashdev.h"
++#include "hw/hw.h"
++#include "hw/pci/pci.h"
++
++#define HASHDEV_BUF_SZ 0x1000
++
++typedef struct {
++	PCIDevice dev;
++	uint32_t enable;
++	uint32_t status;
++	uint32_t intr;
++	uint32_t intr_enable;
++	uint8_t sha1_h[HASHDEV_SHA1_H_SIZE];
++	uint8_t sha1_data[HASHDEV_SHA1_BLOCK_SIZE];
++	uint32_t sha1_data_ptr;
++	uint32_t sha1_data_count;
++	uint32_t sha1_cmd_ptr;
++	uint32_t sha1_cmd_end;
++	QEMUTimer *timer;
++	MemoryRegion mmio;
++} HashdevState;
++
++static const VMStateDescription vmstate_hashdev = {
++	.name = "hashdev",
++	.version_id = 3,
++	.minimum_version_id = 3,
++	.minimum_version_id_old = 3,
++	.fields = (VMStateField[]) {
++		VMSTATE_PCI_DEVICE(dev, HashdevState),
++		VMSTATE_UINT32(enable, HashdevState),
++		VMSTATE_UINT32(status, HashdevState),
++		VMSTATE_UINT32(intr, HashdevState),
++		VMSTATE_UINT32(intr_enable, HashdevState),
++		VMSTATE_UINT8_ARRAY(sha1_h, HashdevState, HASHDEV_SHA1_H_SIZE),
++		VMSTATE_UINT8_ARRAY(sha1_data, HashdevState, HASHDEV_SHA1_BLOCK_SIZE),
++		VMSTATE_UINT32(sha1_data_ptr, HashdevState),
++		VMSTATE_UINT32(sha1_data_count, HashdevState),
++		VMSTATE_UINT32(sha1_cmd_ptr, HashdevState),
++		VMSTATE_UINT32(sha1_cmd_end, HashdevState),
++		VMSTATE_END_OF_LIST()
++	}
++};
++
++static uint32_t le32_read(uint8_t *ptr) {
++	return ptr[0] | ptr[1] << 8 | ptr[2] << 16 | ptr[3] << 24;
++}
++
++static uint32_t be32_read(uint8_t *ptr) {
++	return ptr[3] | ptr[2] << 8 | ptr[1] << 16 | ptr[0] << 24;
++}
++
++static void le32_write(uint8_t *ptr, uint32_t val) {
++	ptr[0] = val;
++	ptr[1] = val >> 8;
++	ptr[2] = val >> 16;
++	ptr[3] = val >> 24;
++}
++
++static void be32_write(uint8_t *ptr, uint32_t val) {
++	ptr[3] = val;
++	ptr[2] = val >> 8;
++	ptr[1] = val >> 16;
++	ptr[0] = val >> 24;
++}
++
++static inline uint32_t rol(uint32_t val, int cnt) {
++	return val << cnt | val >> (32 - cnt);
++}
++
++static inline uint32_t f(int i, uint32_t b, uint32_t c, uint32_t d) {
++	switch (i/20) {
++		case 0:
++			return (b & c) | ((~b) & d);
++		case 1:
++			return b ^ c ^ d;
++		case 2:
++			return (b & c) | (b & d) | (c & d);
++		case 3:
++			return b ^ c ^ d;
++		default:
++			abort();
++	}
++}
++
++static void sha1_step(uint8_t *sha1_h, uint8_t *sha1_data) {
++	static const uint32_t k[4] = {
++		0x5A827999,
++		0x6ED9EBA1,
++		0x8F1BBCDC,
++		0xCA62C1D6,
++	};
++	uint32_t w[80];
++	uint32_t h[5];
++	uint32_t a, b, c, d, e;
++	int i;
++	for (i = 0; i < 5; i++)
++		h[i] = be32_read(sha1_h + i * 4);
++	a = h[0];
++	b = h[1];
++	c = h[2];
++	d = h[3];
++	e = h[4];
++	for (i = 0; i < 16; i++)
++		w[i] = be32_read(sha1_data + i*4);
++	for (i = 16; i < 80; i++)
++		w[i] = rol(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1);
++	for (i = 0; i < 80; i++) {
++		uint32_t temp = rol(a, 5) + f(i, b, c, d) + e + w[i] + k[i / 20];
++		e = d;
++		d = c;
++		c = rol(b, 30);
++		b = a;
++		a = temp;
++	}
++	h[0] += a;
++	h[1] += b;
++	h[2] += c;
++	h[3] += d;
++	h[4] += e;
++	for (i = 0; i < 5; i++)
++		be32_write(sha1_h + i * 4, h[i]);
++}
++
++static void hashdev_sha1_process_data(HashdevState *d) {
++	sha1_step(d->sha1_h, d->sha1_data);
++}
++
++static void hashdev_sha1_process_cmd(HashdevState *d, uint32_t cmd) {
++	int intr;
++	switch (cmd & 3) {
++		case 0:
++			/* SHA1_JUMP */
++			d->sha1_cmd_ptr = cmd & ~3;
++			break;
++		case 1:
++			/* SHA1_H_SAVE */
++			pci_dma_write(&d->dev, cmd & ~3, d->sha1_h, HASHDEV_SHA1_H_SIZE);
++			break;
++		case 2:
++			/* SHA1_H_LOAD */
++			pci_dma_read(&d->dev, cmd & ~3, d->sha1_h, HASHDEV_SHA1_H_SIZE);
++			break;
++		case 3:
++			switch (cmd >> 2 & 0xf) {
++				case 0:
++					/* SHA1_DATA_PTR */
++					d->sha1_data_ptr = cmd & ~0x3f;
++					break;
++				case 1:
++					/* SHA1_DATA_COUNT */
++					d->sha1_data_count = cmd & ~0x3f;
++					break;
++				case 2:
++					/* SHA1_INTR */
++					intr = cmd >> 6 & 0xf;
++					d->intr |= HASHDEV_INTR_USER(intr);
++					break;
++				default:
++					d->intr |= HASHDEV_INTR_INVALID_COMMAND;
++					break;
++			}
++	}
++}
++
++static void hashdev_status_update(HashdevState *d, int skip_tick) {
++	/* determine fetchers status */
++	d->status = 0;
++	if ((d->enable & HASHDEV_ENABLE_FETCH_DATA) && d->sha1_data_count)
++		d->status |= HASHDEV_STATUS_FETCH_DATA;
++	if ((d->enable & HASHDEV_ENABLE_FETCH_CMD) && d->sha1_cmd_ptr != d->sha1_cmd_end)
++		d->status |= HASHDEV_STATUS_FETCH_CMD;
++	/* determine and set PCI interrupt status */
++	pci_set_irq(PCI_DEVICE(d), !!(d->intr & d->intr_enable));
++	/* schedule work */
++	if (!skip_tick) {
++		/* no active blocks - return */
++		if (!d->status)
++			return;
++		/* cmd block active, but data block has work and is disabled */
++		if (d->status == HASHDEV_STATUS_FETCH_CMD && d->sha1_data_count)
++			return;
++		timer_mod(d->timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) + (lrand48() % 1000) * 1000);
++	}
++}
++
++static void hashdev_tick(HashdevState *d) {
++	/* make the device as evil as easily possible by randomizing everything */
++	/* first, determine how many commands we process this time */
++	int work_cnt = lrand48() % 5;
++	while (work_cnt--) {
++		/* first, process data. */
++		if (d->status & HASHDEV_STATUS_FETCH_DATA) {
++			/* how many blocks to process this round */
++			int blocks = 1 + (lrand48() % 16);
++			while (blocks-- && d->sha1_data_count) {
++				pci_dma_read(&d->dev, d->sha1_data_ptr, d->sha1_data, HASHDEV_SHA1_BLOCK_SIZE);
++				d->sha1_data_ptr += HASHDEV_SHA1_BLOCK_SIZE;
++				d->sha1_data_count -= HASHDEV_SHA1_BLOCK_SIZE;
++				hashdev_sha1_process_data(d);
++				if (!d->sha1_data_count) {
++					d->intr |= HASHDEV_INTR_FETCH_DATA_COMPLETE;
++				}
++			}
++		} else if (d->status & HASHDEV_STATUS_FETCH_CMD && !d->sha1_data_count) {
++			/* process commands only if there's no data */
++			uint8_t cmd[4];
++			pci_dma_read(&d->dev, d->sha1_cmd_ptr, &cmd, sizeof cmd);
++			d->sha1_cmd_ptr += 4;
++			hashdev_sha1_process_cmd(d, le32_read(cmd));
++		}
++		/* update the status for the next check */
++		hashdev_status_update(d, 1);
++	}
++	/* another time. */
++	hashdev_status_update(d, 0);
++}
++
++static void hashdev_timer_tick(void *opaque) {
++	hashdev_tick(opaque);
++}
++
++static void hashdev_mmio_writeb(void *opaque, hwaddr addr, uint32_t val)
++{
++	fprintf(stderr, "hashdev error: byte-sized write at %03x, value %02x\n", (int)addr, val);
++}
++
++static void hashdev_mmio_writew(void *opaque, hwaddr addr, uint32_t val)
++{
++	fprintf(stderr, "hashdev error: word-sized write at %03x, value %04x\n", (int)addr, val);
++}
++
++static void hashdev_mmio_writel(void *opaque, hwaddr addr, uint32_t val)
++{
++	HashdevState *d = opaque;
++	int i;
++	if (addr == HASHDEV_ENABLE) {
++		d->enable = val & (HASHDEV_ENABLE_FETCH_DATA | HASHDEV_ENABLE_FETCH_CMD);
++		if (val & ~(HASHDEV_ENABLE_FETCH_DATA | HASHDEV_ENABLE_FETCH_CMD))
++			fprintf(stderr, "hashdev error: invalid ENABLE value %08x\n", val);
++		hashdev_status_update(d, 0);
++		return;
++	}
++	if (addr == HASHDEV_INTR_ENABLE) {
++		d->intr_enable = val & 0x3ffff;
++		if (val & ~0x3ffff)
++			fprintf(stderr, "hashdev error: invalid INTR_ENABLE value %08x\n", val);
++		hashdev_status_update(d, 0);
++		return;
++	}
++	for (i = 0; i < HASHDEV_SHA1_H_SIZE/4; i++) {
++		if (addr == HASHDEV_SHA1_H(i)) {
++			if (d->status & HASHDEV_STATUS_FETCH_DATA)
++				fprintf(stderr, "hashdev error: SHA1_H[%d] written while fetching data\n", i);
++			le32_write(d->sha1_h + i * 4, val);
++		}
++	}
++	for (i = 0; i < HASHDEV_SHA1_BLOCK_SIZE/4; i++) {
++		if (addr == HASHDEV_SHA1_DATA(i)) {
++			if (d->status & HASHDEV_STATUS_FETCH_DATA)
++				fprintf(stderr, "hashdev error: SHA1_DATA[%d] written while fetching data\n", i);
++			le32_write(d->sha1_data + i * 4, val);
++			if (i == HASHDEV_SHA1_BLOCK_SIZE/4 - 1) {
++				hashdev_sha1_process_data(d);
++			}
++		}
++	}
++	if (addr == HASHDEV_SHA1_DATA_PTR) {
++		if (val & 0x3f) {
++			fprintf(stderr, "hashdev error: SHA1_DATA_PTR not aligned\n");
++			val &= ~0x3f;
++		}
++		if ((d->status & HASHDEV_STATUS_FETCH_DATA))
++			fprintf(stderr, "hashdev error: SHA1_DATA_PTR written while fetching data\n");
++		d->sha1_data_ptr = val;
++		return;
++	}
++	if (addr == HASHDEV_SHA1_DATA_COUNT) {
++		if (val & 0x3f) {
++			fprintf(stderr, "hashdev error: SHA1_DATA_COUNT not aligned\n");
++			val &= ~0x3f;
++		}
++		if ((d->status & HASHDEV_STATUS_FETCH_DATA))
++			fprintf(stderr, "hashdev error: SHA1_DATA_COUNT written while fetching data\n");
++		d->sha1_data_count = val;
++		hashdev_status_update(d, 0);
++		return;
++	}
++	if (addr == HASHDEV_SHA1_CMD_PTR) {
++		if (val & 3) {
++			fprintf(stderr, "hashdev error: SHA1_CMD_PTR not aligned\n");
++			val &= ~3;
++		}
++		if ((d->enable & HASHDEV_ENABLE_FETCH_CMD))
++			fprintf(stderr, "hashdev error: SHA1_CMD_PTR written while command fetch enabled\n");
++		d->sha1_cmd_ptr = val;
++		hashdev_status_update(d, 0);
++		return;
++	}
++	if (addr == HASHDEV_SHA1_CMD_END) {
++		if (val & 3) {
++			fprintf(stderr, "hashdev error: SHA1_CMD_END not aligned\n");
++			val &= ~3;
++		}
++		d->sha1_cmd_end = val;
++		hashdev_status_update(d, 0);
++		return;
++	}
++	fprintf(stderr, "hashdev error: invalid register write at %03x, value %08x\n", (int)addr, val);
++}
++
++/* ^^^ */
++
++static uint32_t hashdev_mmio_readb(void *opaque, hwaddr addr)
++{
++	fprintf(stderr, "hashdev error: byte-sized read at %03x\n", (int)addr);
++	return 0xff;
++}
++
++static uint32_t hashdev_mmio_readw(void *opaque, hwaddr addr)
++{
++	fprintf(stderr, "hashdev error: word-sized read at %03x\n", (int)addr);
++	return 0xffff;
++}
++
++static uint32_t hashdev_mmio_readl(void *opaque, hwaddr addr)
++{
++	HashdevState *d = opaque;
++	int i;
++	if (addr == HASHDEV_ENABLE)
++		return d->enable;
++	if (addr == HASHDEV_STATUS)
++		return d->status;
++	if (addr == HASHDEV_INTR)
++		return d->intr;
++	if (addr == HASHDEV_INTR_ENABLE)
++		return d->intr_enable;
++	for (i = 0; i < HASHDEV_SHA1_H_SIZE/4; i++) {
++		if (addr == HASHDEV_SHA1_H(i)) {
++			if (d->status & HASHDEV_STATUS_FETCH_DATA)
++				fprintf(stderr, "hashdev error: SHA1_H[%d] read while fetching data\n", i);
++			return le32_read(d->sha1_h + i * 4);
++		}
++	}
++	if (addr == HASHDEV_SHA1_DATA_PTR)
++		return d->sha1_data_ptr;
++	if (addr == HASHDEV_SHA1_DATA_COUNT)
++		return d->sha1_data_count;
++	if (addr == HASHDEV_SHA1_CMD_PTR)
++		return d->sha1_cmd_ptr;
++	if (addr == HASHDEV_SHA1_CMD_END)
++		return d->sha1_cmd_end;
++	fprintf(stderr, "hashdev error: invalid register read at %03x\n", (int)addr);
++	return 0xffffffff;
++}
++
++static const MemoryRegionOps hashdev_mmio_ops = {
++	.old_mmio = {
++		.read = {
++			hashdev_mmio_readb,
++			hashdev_mmio_readw,
++			hashdev_mmio_readl,
++		},
++		.write = {
++			hashdev_mmio_writeb,
++			hashdev_mmio_writew,
++			hashdev_mmio_writel,
++		},
++	},
++	.endianness = DEVICE_NATIVE_ENDIAN,
++};
++
++static void hashdev_reset(DeviceState *d)
++{
++	HashdevState *s = container_of(d, HashdevState, dev.qdev);
++	int i;
++	/* These registers play fair. */
++	s->enable = 0;
++	s->intr_enable = 0;
++	s->status = 0;
++	/* But these don't; hardware is evil. */
++	s->intr = mrand48() & 0x3ffff;
++	for (i = 0; i < HASHDEV_SHA1_H_SIZE; i++)
++		s->sha1_h[i] = mrand48() & 0xff;
++	for (i = 0; i < HASHDEV_SHA1_BLOCK_SIZE; i++)
++		s->sha1_data[i] = mrand48() & 0xff;
++	s->sha1_data_ptr = mrand48() & ~0x3f;
++	s->sha1_data_count = mrand48() & ~0x3f;
++	s->sha1_cmd_ptr = mrand48() & ~3;
++	s->sha1_cmd_end = mrand48() & ~3;
++}
++
++static int hashdev_init(PCIDevice *pci_dev)
++{
++	HashdevState *d = DO_UPCAST(HashdevState, dev, pci_dev);
++	uint8_t *pci_conf = d->dev.config;
++
++	pci_config_set_interrupt_pin(pci_conf, 1);
++
++	memory_region_init_io(&d->mmio, OBJECT(d), &hashdev_mmio_ops, d, "hashdev", 0x1000);
++	pci_register_bar(&d->dev, 0, PCI_BASE_ADDRESS_SPACE_MEMORY, &d->mmio);
++
++	hashdev_reset(&pci_dev->qdev);
++	d->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, hashdev_timer_tick, d);
++
++	return 0;
++}
++
++static void hashdev_exit(PCIDevice *pci_dev)
++{
++	HashdevState *d = DO_UPCAST(HashdevState, dev, pci_dev);
++
++	timer_free(d->timer);
++	memory_region_destroy(&d->mmio);
++}
++
++static Property hashdev_properties[] = {
++	DEFINE_PROP_END_OF_LIST(),
++};
++
++static void hashdev_class_init(ObjectClass *klass, void *data)
++{
++	DeviceClass *dc = DEVICE_CLASS(klass);
++	PCIDeviceClass *k = PCI_DEVICE_CLASS(klass);
++
++	k->init = hashdev_init;
++	k->exit = hashdev_exit;
++	k->vendor_id = HASHDEV_VENDOR_ID;
++	k->device_id = HASHDEV_DEVICE_ID;
++	k->class_id = PCI_CLASS_PROCESSOR_CO;
++	dc->reset = hashdev_reset;
++	dc->vmsd = &vmstate_hashdev;
++	dc->props = hashdev_properties;
++}
++
++static TypeInfo hashdev_info = {
++	.name          = "hashdev",
++	.parent        = TYPE_PCI_DEVICE,
++	.instance_size = sizeof(HashdevState),
++	.class_init    = hashdev_class_init,
++};
++
++static void hashdev_register_types(void)
++{
++	type_register_static(&hashdev_info);
++}
++
++type_init(hashdev_register_types)
+diff -Nru qemu-1.7.1-orig/hw/misc/hashdev.h qemu-1.7.1/hw/misc/hashdev.h
+--- qemu-1.7.1-orig/hw/misc/hashdev.h	1970-01-01 01:00:00.000000000 +0100
++++ qemu-1.7.1/hw/misc/hashdev.h	2014-04-09 17:40:43.997073990 +0200
+@@ -0,0 +1,38 @@
++#ifndef HASHDEV_H
++#define HASHDEV_H
++
++#define HASHDEV_VENDOR_ID		0x1af4
++#define HASHDEV_DEVICE_ID		0x10ff
++
++#define HASHDEV_ENABLE			0x000
++#define HASHDEV_ENABLE_FETCH_DATA	0x00000001
++#define HASHDEV_ENABLE_FETCH_CMD		0x00000002
++#define HASHDEV_STATUS			0x004
++#define HASHDEV_STATUS_FETCH_DATA	0x00000001
++#define HASHDEV_STATUS_FETCH_CMD		0x00000002
++#define HASHDEV_INTR			0x008
++#define HASHDEV_INTR_USER(i)		(0x00000001 << (i))
++#define HASHDEV_INTR_FETCH_DATA_COMPLETE	0x00010000
++#define HASHDEV_INTR_INVALID_COMMAND	0x00020000
++#define HASHDEV_INTR_ENABLE		0x00c
++
++#define HASHDEV_SHA1_H(i)		(0x020 + (i)*0x4)
++#define HASHDEV_SHA1_DATA(i)		(0x040 + (i)*0x4)
++
++#define HASHDEV_SHA1_DATA_PTR		0x010
++#define HASHDEV_SHA1_DATA_COUNT		0x014
++
++#define HASHDEV_SHA1_CMD_PTR		0x018
++#define HASHDEV_SHA1_CMD_END		0x01c
++
++#define HASHDEV_CMD_SHA1_JUMP(addr)	(0x00 | (addr))
++#define HASHDEV_CMD_SHA1_H_SAVE(addr)	(0x01 | (addr))
++#define HASHDEV_CMD_SHA1_H_LOAD(addr)	(0x02 | (addr))
++#define HASHDEV_CMD_SHA1_DATA_PTR(addr)	(0x03 | (addr))
++#define HASHDEV_CMD_SHA1_DATA_COUNT(cnt)	(0x07 | (cnt))
++#define HASHDEV_CMD_SHA1_INTR(idx)	(0x0b | (idx) << 6)
++
++#define HASHDEV_SHA1_H_SIZE		0x14
++#define HASHDEV_SHA1_BLOCK_SIZE		0x40
++
++#endif
+diff -Nru qemu-1.7.1-orig/hw/misc/Makefile.objs qemu-1.7.1/hw/misc/Makefile.objs
+--- qemu-1.7.1-orig/hw/misc/Makefile.objs	2014-03-25 15:01:10.000000000 +0100
++++ qemu-1.7.1/hw/misc/Makefile.objs	2014-04-09 18:10:31.031137238 +0200
+@@ -42,3 +42,5 @@
+ obj-$(CONFIG_ZYNQ) += zynq_slcr.o
+ 
+ obj-$(CONFIG_PVPANIC) += pvpanic.o
++
++common-obj-$(CONFIG_PCI) += hashdev.o
