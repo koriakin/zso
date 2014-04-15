@@ -1,0 +1,1 @@
+obj-m   := seqfile_example.o
