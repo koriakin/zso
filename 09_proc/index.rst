@@ -7,8 +7,8 @@ Data: 15.04.2014, 16.04.2014
 .. toctree::
    :hidden:
 
-   zadanie
    p1_seqfile/index
+   zadanie
 
 
 Materiały dodatkowe
