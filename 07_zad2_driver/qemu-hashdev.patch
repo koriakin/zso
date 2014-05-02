@@ -1,7 +1,7 @@
-diff -Nru qemu-1.7.1-orig/hw/misc/hashdev.c qemu-1.7.1/hw/misc/hashdev.c
---- qemu-1.7.1-orig/hw/misc/hashdev.c	1970-01-01 01:00:00.000000000 +0100
-+++ qemu-1.7.1/hw/misc/hashdev.c	2014-04-09 18:27:03.411758809 +0200
-@@ -0,0 +1,456 @@
+diff -ru qemu-1.7.1-orig/hw/misc/hashdev.c qemu-1.7.1/hw/misc/hashdev.c
+--- qemu-1.7.1-orig/hw/misc/hashdev.c	2014-05-02 18:13:17.778507800 +0200
++++ qemu-1.7.1/hw/misc/hashdev.c	2014-05-02 18:12:33.801906647 +0200
+@@ -0,0 +1,463 @@
 +/*
 + * SHA-1 accelerator device
 + *
@@ -253,6 +253,13 @@ diff -Nru qemu-1.7.1-orig/hw/misc/hashdev.c qemu-1.7.1/hw/misc/hashdev.c
 +		hashdev_status_update(d, 0);
 +		return;
 +	}
++	if (addr == HASHDEV_INTR) {
++		d->intr &= ~val;
++		if (val & ~0x3ffff)
++			fprintf(stderr, "hashdev error: invalid INTR value %08x\n", val);
++		hashdev_status_update(d, 0);
++		return;
++	}
 +	if (addr == HASHDEV_INTR_ENABLE) {
 +		d->intr_enable = val & 0x3ffff;
 +		if (val & ~0x3ffff)
@@ -458,8 +465,8 @@ diff -Nru qemu-1.7.1-orig/hw/misc/hashdev.c qemu-1.7.1/hw/misc/hashdev.c
 +}
 +
 +type_init(hashdev_register_types)
-diff -Nru qemu-1.7.1-orig/hw/misc/hashdev.h qemu-1.7.1/hw/misc/hashdev.h
---- qemu-1.7.1-orig/hw/misc/hashdev.h	1970-01-01 01:00:00.000000000 +0100
+diff -ru qemu-1.7.1-orig/hw/misc/hashdev.h qemu-1.7.1/hw/misc/hashdev.h
+--- qemu-1.7.1-orig/hw/misc/hashdev.h	2014-05-02 18:13:18.538506666 +0200
 +++ qemu-1.7.1/hw/misc/hashdev.h	2014-04-09 17:40:43.997073990 +0200
 @@ -0,0 +1,38 @@
 +#ifndef HASHDEV_H
@@ -500,7 +507,7 @@ diff -Nru qemu-1.7.1-orig/hw/misc/hashdev.h qemu-1.7.1/hw/misc/hashdev.h
 +#define HASHDEV_SHA1_BLOCK_SIZE		0x40
 +
 +#endif
-diff -Nru qemu-1.7.1-orig/hw/misc/Makefile.objs qemu-1.7.1/hw/misc/Makefile.objs
+diff -ru qemu-1.7.1-orig/hw/misc/Makefile.objs qemu-1.7.1/hw/misc/Makefile.objs
 --- qemu-1.7.1-orig/hw/misc/Makefile.objs	2014-03-25 15:01:10.000000000 +0100
 +++ qemu-1.7.1/hw/misc/Makefile.objs	2014-04-09 18:10:31.031137238 +0200
 @@ -42,3 +42,5 @@
