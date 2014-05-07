@@ -16,7 +16,7 @@ Dane oraz polecenia są odczytywane przez bezpośredni dostęp do pamięci (DMA)
 Urządzenie jest podłączane do komputera przez szynę PCI - identyfikator
 producenta to ``0x1af4``, a identyfikator urządzenia to ``0x10ff``.
 
-Urządzeniem steruje się przez porty wejścia/wyjścia zmapowane do pamięci
+Urządzeniem steruje się przez rejestry wejścia/wyjścia zmapowane do pamięci
 (MMIO). Ten obszar MMIO jest pierwszym i jedynym obszarem BAR używanym
 przez urządzenie (BAR0). Urządzenie wykorzystuje również jedną linię
 przerwania PCI.
