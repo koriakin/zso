@@ -18,7 +18,7 @@ Spis treści:
    09_proc/index
    10_ext2/index
    11_zad3_kernel/index
-   12_boot/index
-   13_exploit/index
+   12_exploit/index
+   13_boot/index
    14_tbd/index
    15_zad4_poprawkowe/index
