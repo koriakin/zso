@@ -19,6 +19,4 @@ Spis treści:
    10_ext2/index
    11_zad3_kernel/index
    12_exploit/index
-   13_boot/index
-   14_tbd/index
-   15_zad4_poprawkowe/index
+   13_os/index
